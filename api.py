@@ -1,5 +1,6 @@
-from flask import Flask
+from flask import Flask, request
 import tweepy
+from werkzeug.contrib.atom import AtomFeed
 
 app = Flask(__name__)
 
@@ -44,9 +45,36 @@ def get_replies(user, reply_id):
                 return replies
     return replies
 
-
 # endpoint calling 'get_feed' function, generating the Atom feed
 @app.route('/dashboard.xml')
-def get_feed():
+def feeds():
     user = request.args.get('user', type=str)
+    feed = AtomFeed(title="Last 30 tweets from {} dashboard".format(user),
+                    feed_url='https://twitter.com/{}'.format(user), url='https://twitter.com')
+
+    # Sort post by created date
+    tweets = get_dashboard_tweets(user)
+
+    for tweet in tweets:
+        replies = get_replies(user, tweet.id)
+        feed.add("TWEET", tweet.full_text,
+                 content_type='html',
+                 author= tweet.user.name,
+                 url='https://twitter.com/kalousekm/status/{}'.format(tweet.id),
+                 updated=tweet.created_at
+                )
+        if replies:
+            for reply in replies:
+                feed.add("REPLY", reply.full_text,
+                         content_type='html',
+                         author=reply.user.name,
+                         url='https://twitter.com/kalousekm/status/{}'.format(tweet.id),
+                         updated=reply.created_at
+                         )
+
+    return feed.get_response()
+
+
+
+
 
