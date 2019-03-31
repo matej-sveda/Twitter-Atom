@@ -56,21 +56,12 @@ def feeds():
     tweets = get_dashboard_tweets(user)
 
     for tweet in tweets:
-        replies = get_replies(user, tweet.id)
         feed.add("TWEET", tweet.full_text,
                  content_type='html',
                  author= tweet.user.name,
                  url='https://twitter.com/kalousekm/status/{}'.format(tweet.id),
                  updated=tweet.created_at
                 )
-        if replies:
-            for reply in replies:
-                feed.add("REPLY", reply.full_text,
-                         content_type='html',
-                         author=reply.user.name,
-                         url='https://twitter.com/kalousekm/status/{}'.format(tweet.id),
-                         updated=reply.created_at
-                         )
 
     return feed.get_response()
 
