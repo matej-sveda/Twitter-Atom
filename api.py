@@ -1,4 +1,4 @@
-from flask import Flask, request
+from flask import Flask, request, jsonify
 import tweepy
 from werkzeug.contrib.atom import AtomFeed
 
@@ -15,7 +15,8 @@ auth.set_access_token(app.config['TWITTER_ACCESS_TOKEN'],
 
 tweepy_api = tweepy.API(auth)
 
-# function returns a list of 30 most recent tweets on user's dashboard
+# function returns a list of 30 most recent tweets on user's dashboard, doesn't work for tweets with less than 30 tweets,
+# this problem is described in dev_notes.txt file
 def get_dashboard_tweets(username):
     dashboard_tweets = []
     tweets = tweepy_api.user_timeline(username, tweet_mode='extended')
@@ -29,10 +30,6 @@ def get_dashboard_tweets(username):
                     return dashboard_tweets
 
         tweets = tweepy_api.user_timeline(username, tweet_mode='extended', max_id = id_last - 1)
-
-        # in case of dashboard containing less then 30 tweets, this condition controls the end of while-loop
-        if dashboard_tweets[len(dashboard_tweets) - 1] == dashboard_tweets[len(dashboard_tweets) - 2]:
-            return dashboard_tweets
 
 # function returns up to 10 most recent replies to chosen tweet, problems described in dev_notes.txt file
 def get_replies(user, reply_id):
@@ -48,24 +45,25 @@ def get_replies(user, reply_id):
 # endpoint calling 'get_feed' function, generating the Atom feed
 @app.route('/dashboard.xml')
 def feeds():
-    user = request.args.get('user', type=str)
-    feed = AtomFeed(title="Last 30 tweets from {} dashboard".format(user),
-                    feed_url='https://twitter.com/{}'.format(user), url='https://twitter.com')
+    error = {"Error": "Somenthing went wrong, check your input."}
 
-    # Sort post by created date
-    tweets = get_dashboard_tweets(user)
+    try:
+        user = request.args.get('user', type=str)
+        feed = AtomFeed(title="Last 30 tweets from {} dashboard".format(user),
+                        feed_url='https://twitter.com/{}'.format(user), url='https://twitter.com')
 
-    for tweet in tweets:
-        feed.add("TWEET", tweet.full_text,
-                 content_type='html',
-                 author= tweet.user.name,
-                 url='https://twitter.com/kalousekm/status/{}'.format(tweet.id),
-                 updated=tweet.created_at
-                )
+        # Sort post by created date
+        tweets = get_dashboard_tweets(user)
 
-    return feed.get_response()
+        for tweet in tweets:
+            feed.add("TWEET", tweet.full_text,
+                     content_type='html',
+                     author= tweet.user.name,
+                     url='https://twitter.com/kalousekm/status/{}'.format(tweet.id),
+                     updated=tweet.created_at
+                    )
 
-
-
-
-
+        return feed.get_response(), 200
+    
+    except:
+        return jsonify(error), 404
