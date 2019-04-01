@@ -59,7 +59,7 @@ def feeds():
             feed.add("TWEET", tweet.full_text,
                      content_type='html',
                      author= tweet.user.name,
-                     url='https://twitter.com/kalousekm/status/{}'.format(tweet.id),
+                     url='https://twitter.com/{}/status/{}'.format(tweet.user.screen_name, tweet.id),
                      updated=tweet.created_at
                     )
 
