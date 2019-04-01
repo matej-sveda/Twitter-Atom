@@ -1,6 +1,6 @@
 # Twitter - Atom feed generator
 
-Project contains API application, which communicate with Twitter API and generates an Atom feed, contained of 30 most recent tweets on user dashboard.
+Project contains API application, which communicate with Twitter API and generates an Atom feed, contained of 30 most recent tweets on user dashboard. Before using, enter twitter keys and tokens into config.py file.
 
 ## Getting Started
 
